@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Badminton Scoreboard Admin</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="admin-body">
+    <div class="admin-shell">
+      <header class="admin-header panel">
+        <div>
+          <p class="eyebrow">Live match control</p>
+          <h1>Badminton Scoreboard Admin</h1>
+          <p class="muted">Drive the stream overlay from one dashboard and keep game-by-game history visible on air.</p>
+        </div>
+        <div class="overlay-link-group">
+          <span class="muted">OBS browser source</span>
+          <a id="overlay-link" class="overlay-link" href="/overlay" target="_blank" rel="noreferrer">/overlay</a>
+        </div>
+      </header>
+
+      <main class="admin-grid">
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Match setup</p>
+              <h2>Settings</h2>
+            </div>
+            <span id="match-status" class="status-pill">Awaiting score</span>
+          </div>
+
+          <form id="settings-form" class="stack">
+            <div class="form-grid two-column">
+              <label>
+                <span>Event name</span>
+                <input id="event-name" name="eventName" type="text" maxlength="60">
+              </label>
+              <label>
+                <span>Court label</span>
+                <input id="court-name" name="courtName" type="text" maxlength="40">
+              </label>
+              <label>
+                <span>Game type</span>
+                <select id="game-type" name="gameType">
+                  <option value="singles">Singles</option>
+                  <option value="doubles">Doubles</option>
+                </select>
+              </label>
+              <label>
+                <span>Total games</span>
+                <input id="total-games" name="totalGames" type="number" min="1" max="9">
+              </label>
+              <label>
+                <span>Points to win</span>
+                <input id="points-to-win" name="pointsToWin" type="number" min="1" max="99">
+              </label>
+              <label>
+                <span>Win by</span>
+                <input id="win-by" name="winBy" type="number" min="1" max="10">
+              </label>
+              <label class="full-width">
+                <span>Hard cap score</span>
+                <input id="hard-cap" name="hardCap" type="number" min="1" max="99">
+              </label>
+            </div>
+
+            <div class="actions-row">
+              <button class="primary-button" type="submit">Save settings</button>
+              <p class="helper-text">Default badminton format is 21 points, win by 2, capped at 30.</p>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Competitors</p>
+              <h2>Names on stream</h2>
+            </div>
+          </div>
+
+          <form id="teams-form" class="stack">
+            <div class="form-grid two-column team-grid">
+              <fieldset class="team-fieldset">
+                <legend>Left side</legend>
+                <label>
+                  <span>Side label</span>
+                  <input id="team-a-label" type="text" maxlength="30">
+                </label>
+                <label>
+                  <span>Player 1</span>
+                  <input id="team-a-player-1" type="text" maxlength="40">
+                </label>
+                <label data-doubles-only>
+                  <span>Player 2</span>
+                  <input id="team-a-player-2" type="text" maxlength="40">
+                </label>
+              </fieldset>
+
+              <fieldset class="team-fieldset">
+                <legend>Right side</legend>
+                <label>
+                  <span>Side label</span>
+                  <input id="team-b-label" type="text" maxlength="30">
+                </label>
+                <label>
+                  <span>Player 1</span>
+                  <input id="team-b-player-1" type="text" maxlength="40">
+                </label>
+                <label data-doubles-only>
+                  <span>Player 2</span>
+                  <input id="team-b-player-2" type="text" maxlength="40">
+                </label>
+              </fieldset>
+            </div>
+
+            <div class="actions-row">
+              <button class="primary-button" type="submit">Save names</button>
+              <p class="helper-text">Switching to doubles automatically reveals the second player field on stream.</p>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel score-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Live scoring</p>
+              <h2 id="game-heading">Game 1</h2>
+            </div>
+            <span id="games-summary" class="muted">Best of 3</span>
+          </div>
+
+          <div class="scoreboard-grid">
+            <article class="score-card">
+              <p id="score-name-a" class="score-card__name">Player A</p>
+              <div id="score-a" class="score-card__value">0</div>
+              <div class="score-card__controls">
+                <button type="button" class="secondary-button score-button" data-team="a" data-delta="-1">-1</button>
+                <button type="button" class="primary-button score-button" data-team="a" data-delta="1">+1</button>
+              </div>
+            </article>
+
+            <article class="score-card">
+              <p id="score-name-b" class="score-card__name">Player B</p>
+              <div id="score-b" class="score-card__value">0</div>
+              <div class="score-card__controls">
+                <button type="button" class="secondary-button score-button" data-team="b" data-delta="-1">-1</button>
+                <button type="button" class="primary-button score-button" data-team="b" data-delta="1">+1</button>
+              </div>
+            </article>
+          </div>
+
+          <form id="direct-score-form" class="inline-form">
+            <label>
+              <span>Set exact score</span>
+              <div class="inline-score-inputs">
+                <input id="direct-score-a" type="number" min="0" max="99">
+                <span class="score-separator">:</span>
+                <input id="direct-score-b" type="number" min="0" max="99">
+              </div>
+            </label>
+            <button class="secondary-button" type="submit">Apply score</button>
+          </form>
+
+          <div class="actions-row action-stack">
+            <button id="next-game-button" class="primary-button" type="button">Start next game</button>
+            <button id="undo-button" class="secondary-button" type="button">Undo last action</button>
+            <button id="reset-button" class="danger-button" type="button">Reset match</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">On-air layout</p>
+              <h2>Games strip</h2>
+            </div>
+          </div>
+          <div id="games-strip" class="games-strip"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/admin.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+﻿{
+  "name": "badminton-score-counter",
+  "version": "1.0.0",
+  "description": "Live badminton scoreboard for OBS with an admin dashboard and browser overlay.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/match-logic.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
