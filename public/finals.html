@@ -1,0 +1,46 @@
+﻿<!doctype html>
+<html lang="en" class="finals-page">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Badminton Finals Overlay</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="finals-body">
+    <main class="finals-stage">
+      <section id="finals-shell" class="finals-shell">
+        <article class="finals-side finals-side--left">
+          <img id="finals-image-a" class="finals-side__image" alt="Left competitor profile image" hidden>
+          <div id="finals-name-a" class="finals-side__name"></div>
+        </article>
+
+        <section id="finals-card" class="finals-card" aria-label="Upcoming match details">
+          <img id="finals-logo" class="finals-card__logo" alt="Tournament logo" hidden>
+          <h2 id="finals-event-name" class="finals-card__title"></h2>
+          <p class="finals-card__eyebrow">Upcoming Match</p>
+          <div class="finals-card__rows">
+            <div class="finals-card__row">
+              <span class="finals-card__label">Division</span>
+              <strong id="finals-division" class="finals-card__value"></strong>
+            </div>
+            <div class="finals-card__row">
+              <span class="finals-card__label">Game Type</span>
+              <strong id="finals-game-type" class="finals-card__value"></strong>
+            </div>
+            <div class="finals-card__row">
+              <span class="finals-card__label">Total Games</span>
+              <strong id="finals-total-games" class="finals-card__value"></strong>
+            </div>
+          </div>
+        </section>
+
+        <article class="finals-side finals-side--right">
+          <img id="finals-image-b" class="finals-side__image" alt="Right competitor profile image" hidden>
+          <div id="finals-name-b" class="finals-side__name"></div>
+        </article>
+      </section>
+    </main>
+
+    <script src="/finals.js" defer></script>
+  </body>
+</html>

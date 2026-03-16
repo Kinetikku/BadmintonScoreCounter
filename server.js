@@ -4,15 +4,17 @@ const http = require("node:http");
 const os = require("node:os");
 const {
   applyDerivedState,
+  applyScoreDelta,
   createDefaultState,
+  endFinalsAnimation,
   prepareUndoSnapshot,
   resetMatch,
   setCurrentGameScore,
   startNextGame,
   toPublicState,
+  triggerFinalsAnimation,
   updateSettings,
-  updateTeams,
-  applyScoreDelta
+  updateTeams
 } = require("./src/match-logic");
 
 const PORT = Number(process.env.PORT || 3000);
@@ -29,6 +31,7 @@ const CONTENT_TYPES = {
   ".json": "application/json; charset=utf-8"
 };
 
+const MAX_REQUEST_BODY_BYTES = 15_000_000;
 const clients = new Set();
 fs.mkdirSync(DATA_DIR, { recursive: true });
 let state = loadState();
@@ -121,8 +124,8 @@ function parseBody(request) {
     request.on("data", (chunk) => {
       body += chunk;
 
-      if (body.length > 1_000_000) {
-        reject(new Error("Request body too large."));
+      if (body.length > MAX_REQUEST_BODY_BYTES) {
+        reject(new Error("Request body too large. Use smaller images or compressed PNG/WebP files."));
       }
     });
 
@@ -150,6 +153,10 @@ function resolveStaticPath(urlPath) {
 
   if (urlPath === "/overlay") {
     return path.join(PUBLIC_DIR, "overlay.html");
+  }
+
+  if (urlPath === "/finals") {
+    return path.join(PUBLIC_DIR, "finals.html");
   }
 
   const localPath = path.normalize(path.join(PUBLIC_DIR, urlPath.replace(/^\/+/, "")));
@@ -223,6 +230,18 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "POST" && requestUrl.pathname === "/api/finals/trigger") {
+    const publicState = mutateState((draft) => triggerFinalsAnimation(draft));
+    sendJson(response, 200, publicState);
+    return;
+  }
+
+  if (request.method === "POST" && requestUrl.pathname === "/api/finals/end") {
+    const publicState = mutateState((draft) => endFinalsAnimation(draft));
+    sendJson(response, 200, publicState);
+    return;
+  }
+
   if (request.method === "POST" && requestUrl.pathname === "/api/score") {
     try {
       const payload = await parseBody(request);
@@ -263,34 +282,36 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && requestUrl.pathname === "/api/undo") {
-    const publicState = undoState();
-    sendJson(response, 200, publicState);
+    sendJson(response, 200, undoState());
     return;
   }
 
   if (request.method === "GET") {
-    const staticPath = resolveStaticPath(requestUrl.pathname);
-    if (staticPath) {
-      sendFile(response, staticPath);
+    const filePath = resolveStaticPath(requestUrl.pathname);
+
+    if (!filePath) {
+      sendJson(response, 404, { error: "Not found" });
       return;
     }
+
+    sendFile(response, filePath);
+    return;
   }
 
-  sendJson(response, 404, { error: "Route not found." });
+  sendJson(response, 404, { error: "Not found" });
 });
-
-setInterval(() => {
-  for (const client of clients) {
-    client.write(": keep-alive\n\n");
-  }
-}, 15_000).unref();
 
 server.listen(PORT, HOST, () => {
-  console.log("Badminton score server running.");
-  for (const url of getLocalUrls()) {
-    console.log(`  Admin:   ${url}/admin`);
-    console.log(`  Overlay: ${url}/overlay`);
+  const urls = getLocalUrls();
+  console.log("Badminton scoreboard is live.");
+  for (const url of urls) {
+    console.log(`- Admin: ${url}/admin`);
+    console.log(`- Overlay: ${url}/overlay`);
+    console.log(`- Finals: ${url}/finals`);
   }
 });
+
+
+
 
 

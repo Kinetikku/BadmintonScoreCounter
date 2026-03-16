@@ -1,9 +1,10 @@
-# Badminton Score Counter
+﻿# Badminton Score Counter
 
 Local live-score software for badminton streams. It gives you:
 
 - an admin dashboard to update names, format, and scores
 - a clean browser overlay for OBS
+- a separate finals intro overlay for pre-match player reveals
 - built-in badminton win logic with configurable rules
 - game-by-game history that stays on screen while the next game starts
 
@@ -28,20 +29,27 @@ node server.js
 http://localhost:3000/admin
 ```
 
-4. Add this OBS Browser Source:
+4. Add this scoreboard OBS Browser Source:
 
 ```text
 http://localhost:3000/overlay
 ```
 
-5. In OBS, set the Browser Source size to around `500 x 110` or `500 x 120` for the compact strip layout.
-6. Leave the terminal window running during the event. If you close it, the local scoreboard server stops.
+5. Add this finals intro OBS Browser Source when you want the pre-match tale-of-the-tape graphic:
+
+```text
+http://localhost:3000/finals
+```
+
+6. In OBS, set the scoreboard Browser Source size to around `500 x 110` or `500 x 120` for the compact strip layout.
+7. Leave the terminal window running during the event. If you close it, the local scoreboard server stops.
 
 ## Before You Go Live
 
 - Enter player names in the admin page before the match starts.
 - Choose `Singles` or `Doubles` depending on the fixture.
 - Set total games and scoring rules if they differ from standard badminton.
+- Save player image URLs in the admin page before using the finals intro overlay. You can also choose a local image file and the admin will store it as a data URL for OBS.
 - Refresh the OBS browser source once after major styling changes.
 - If you restart the app, the last saved match state is restored from `data/match-state.json`.
 
@@ -54,11 +62,12 @@ http://localhost:3000/overlay
 - When a game finishes, its score remains visible in the games strip. Click `Start next game` to move on.
 - `Undo last action` restores the previous state.
 - Match state is saved to `data/match-state.json`, so refreshes and restarts keep your latest scoreboard.
+- Finals profile images are saved with each side and reused by the `/finals` browser source.
 
 ## OBS Notes
 
 - Use a Browser Source, not a static local HTML file, if you want true live updates without reloading.
-- If OBS runs on the same machine, `http://localhost:3000/overlay` is the easiest setup.
+- If OBS runs on the same machine, `http://localhost:3000/overlay` and `http://localhost:3000/finals` are the easiest setup.
 - If OBS runs on a different machine on your local network, start the server and use your LAN IP instead of `localhost`.
 
 ## Project Layout
@@ -66,7 +75,8 @@ http://localhost:3000/overlay
 - `server.js`: local HTTP server, persistence, and live event streaming
 - `src/match-logic.js`: badminton scoring and match-state rules
 - `public/admin.html`: control dashboard
-- `public/overlay.html`: on-stream overlay
+- `public/overlay.html`: on-stream scoreboard overlay
+- `public/finals.html`: pre-match finals intro overlay
 - `tests/match-logic.test.js`: rules smoke tests
 
 ## Test It
@@ -76,3 +86,4 @@ node tests/match-logic.test.js
 ```
 
 If your shell allows it, `npm test` runs the same command.
+

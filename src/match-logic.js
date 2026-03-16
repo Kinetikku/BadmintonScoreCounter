@@ -1,11 +1,14 @@
-const DEFAULT_SETTINGS = {
+﻿const DEFAULT_SETTINGS = {
   eventName: "Badminton Championship",
   courtName: "Court 1",
   gameType: "singles",
   totalGames: 3,
   pointsToWin: 21,
   winBy: 2,
-  hardCap: 30
+  hardCap: 30,
+  logoUrl: "",
+  showLogo: false,
+  logoVersion: 0
 };
 
 function clampNumber(value, min, max) {
@@ -44,12 +47,20 @@ function createDefaultState() {
     teams: {
       a: {
         displayName: "Court Left",
-        players: ["Player A", "Player A2"]
+        players: ["Player A", "Player A2"],
+        imageUrl: "",
+        imageVersion: 0
       },
       b: {
         displayName: "Court Right",
-        players: ["Player B", "Player B2"]
+        players: ["Player B", "Player B2"],
+        imageUrl: "",
+        imageVersion: 0
       }
+    },
+    presentation: {
+      finalsTrigger: 0,
+      finalsActive: false
     },
     games: [createGame(1)],
     summary: {
@@ -83,7 +94,10 @@ function normalizeSettings(rawSettings = {}) {
     totalGames: clampNumber(rawSettings.totalGames ?? DEFAULT_SETTINGS.totalGames, 1, 9),
     pointsToWin,
     winBy,
-    hardCap
+    hardCap,
+    logoUrl: typeof rawSettings.logoUrl === "string" ? rawSettings.logoUrl.trim() : DEFAULT_SETTINGS.logoUrl,
+    showLogo: Boolean(rawSettings.showLogo),
+    logoVersion: clampNumber(rawSettings.logoVersion ?? DEFAULT_SETTINGS.logoVersion, 0, 9_999_999_999_999)
   };
 }
 
@@ -98,15 +112,26 @@ function normalizeTeams(rawTeams = {}) {
       players: [
         cleanText(teamA.players?.[0], defaultState.teams.a.players[0]),
         cleanText(teamA.players?.[1], defaultState.teams.a.players[1])
-      ]
+      ],
+      imageUrl: typeof teamA.imageUrl === "string" ? teamA.imageUrl.trim() : defaultState.teams.a.imageUrl,
+      imageVersion: clampNumber(teamA.imageVersion ?? defaultState.teams.a.imageVersion, 0, 9_999_999_999_999)
     },
     b: {
       displayName: cleanText(teamB.displayName, defaultState.teams.b.displayName),
       players: [
         cleanText(teamB.players?.[0], defaultState.teams.b.players[0]),
         cleanText(teamB.players?.[1], defaultState.teams.b.players[1])
-      ]
+      ],
+      imageUrl: typeof teamB.imageUrl === "string" ? teamB.imageUrl.trim() : defaultState.teams.b.imageUrl,
+      imageVersion: clampNumber(teamB.imageVersion ?? defaultState.teams.b.imageVersion, 0, 9_999_999_999_999)
     }
+  };
+}
+
+function normalizePresentation(rawPresentation = {}) {
+  return {
+    finalsTrigger: clampNumber(rawPresentation.finalsTrigger ?? 0, 0, 1_000_000_000),
+    finalsActive: Boolean(rawPresentation.finalsActive)
   };
 }
 
@@ -159,6 +184,7 @@ function gamesNeededToWin(totalGames) {
 function applyDerivedState(rawState = {}) {
   const settings = normalizeSettings(rawState.settings);
   const teams = normalizeTeams(rawState.teams);
+  const presentation = normalizePresentation(rawState.presentation);
   const history = Array.isArray(rawState.history) ? rawState.history.slice(-50) : [];
 
   const games = normalizeGames(rawState.games, settings);
@@ -179,6 +205,7 @@ function applyDerivedState(rawState = {}) {
   return {
     settings,
     teams,
+    presentation,
     games,
     summary: {
       activeGameNumber,
@@ -205,12 +232,18 @@ function prepareUndoSnapshot(state) {
 }
 
 function updateSettings(state, payload = {}) {
+  const nextSettings = {
+    ...state.settings,
+    ...payload
+  };
+
+  if (Object.prototype.hasOwnProperty.call(payload, "logoUrl")) {
+    nextSettings.logoVersion = Date.now();
+  }
+
   return applyDerivedState({
     ...state,
-    settings: {
-      ...state.settings,
-      ...payload
-    }
+    settings: nextSettings
   });
 }
 
@@ -226,9 +259,38 @@ function updateTeams(state, payload = {}) {
     }
   };
 
+  if (payload.a && Object.prototype.hasOwnProperty.call(payload.a, "imageUrl")) {
+    nextTeams.a.imageVersion = Date.now();
+  }
+
+  if (payload.b && Object.prototype.hasOwnProperty.call(payload.b, "imageUrl")) {
+    nextTeams.b.imageVersion = Date.now();
+  }
+
   return applyDerivedState({
     ...state,
     teams: nextTeams
+  });
+}
+
+function triggerFinalsAnimation(state) {
+  return applyDerivedState({
+    ...state,
+    presentation: {
+      ...state.presentation,
+      finalsTrigger: clampNumber((state.presentation?.finalsTrigger ?? 0) + 1, 0, 1_000_000_000),
+      finalsActive: true
+    }
+  });
+}
+
+function endFinalsAnimation(state) {
+  return applyDerivedState({
+    ...state,
+    presentation: {
+      ...state.presentation,
+      finalsActive: false
+    }
   });
 }
 
@@ -288,6 +350,7 @@ function resetMatch(state, options = {}) {
   return applyDerivedState({
     settings: keepSettings ? state.settings : defaultState.settings,
     teams: keepTeams ? state.teams : defaultState.teams,
+    presentation: keepTeams ? state.presentation : defaultState.presentation,
     games: [createGame(1)],
     history: []
   });
@@ -310,11 +373,13 @@ module.exports = {
   applyDerivedState,
   applyScoreDelta,
   createDefaultState,
+  endFinalsAnimation,
   prepareUndoSnapshot,
   resetMatch,
   setCurrentGameScore,
   startNextGame,
   toPublicState,
+  triggerFinalsAnimation,
   updateSettings,
   updateTeams
 };

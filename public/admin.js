@@ -1,5 +1,8 @@
 ﻿const elements = {
   overlayLink: document.querySelector("#overlay-link"),
+  finalsLink: document.querySelector("#finals-link"),
+  triggerFinalsButton: document.querySelector("#trigger-finals-button"),
+  endFinalsButton: document.querySelector("#end-finals-button"),
   matchStatus: document.querySelector("#match-status"),
   gameHeading: document.querySelector("#game-heading"),
   gamesSummary: document.querySelector("#games-summary"),
@@ -23,15 +26,22 @@
     totalGames: document.querySelector("#total-games"),
     pointsToWin: document.querySelector("#points-to-win"),
     winBy: document.querySelector("#win-by"),
-    hardCap: document.querySelector("#hard-cap")
+    hardCap: document.querySelector("#hard-cap"),
+    logoUrl: document.querySelector("#logo-url"),
+    logoFile: document.querySelector("#logo-file"),
+    showLogo: document.querySelector("#show-logo")
   },
   teams: {
     aLabel: document.querySelector("#team-a-label"),
     aPlayer1: document.querySelector("#team-a-player-1"),
     aPlayer2: document.querySelector("#team-a-player-2"),
+    aImageUrl: document.querySelector("#team-a-image-url"),
+    aImageFile: document.querySelector("#team-a-image-file"),
     bLabel: document.querySelector("#team-b-label"),
     bPlayer1: document.querySelector("#team-b-player-1"),
-    bPlayer2: document.querySelector("#team-b-player-2")
+    bPlayer2: document.querySelector("#team-b-player-2"),
+    bImageUrl: document.querySelector("#team-b-image-url"),
+    bImageFile: document.querySelector("#team-b-image-file")
   },
   doublesOnly: Array.from(document.querySelectorAll("[data-doubles-only]"))
 };
@@ -42,6 +52,14 @@ function setValueIfIdle(input, value) {
   }
 
   input.value = value;
+}
+
+function setCheckedIfIdle(input, checked) {
+  if (document.activeElement === input) {
+    return;
+  }
+
+  input.checked = Boolean(checked);
 }
 
 function formatTeamName(team, gameType) {
@@ -83,6 +101,15 @@ function buildGameCards(state) {
   return cards.join("");
 }
 
+async function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(new Error("Could not read the selected image file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 function updateVisibility(gameType) {
   const isDoubles = gameType === "doubles";
   for (const block of elements.doublesOnly) {
@@ -96,6 +123,8 @@ function render(state) {
 
   elements.overlayLink.href = `${window.location.origin}/overlay`;
   elements.overlayLink.textContent = `${window.location.origin}/overlay`;
+  elements.finalsLink.href = `${window.location.origin}/finals`;
+  elements.finalsLink.textContent = `${window.location.origin}/finals`;
 
   setValueIfIdle(elements.settings.eventName, state.settings.eventName);
   setValueIfIdle(elements.settings.courtName, state.settings.courtName);
@@ -104,13 +133,17 @@ function render(state) {
   setValueIfIdle(elements.settings.pointsToWin, state.settings.pointsToWin);
   setValueIfIdle(elements.settings.winBy, state.settings.winBy);
   setValueIfIdle(elements.settings.hardCap, state.settings.hardCap);
+  setValueIfIdle(elements.settings.logoUrl, state.settings.logoUrl || "");
+  setCheckedIfIdle(elements.settings.showLogo, state.settings.showLogo);
 
   setValueIfIdle(elements.teams.aLabel, state.teams.a.displayName);
   setValueIfIdle(elements.teams.aPlayer1, state.teams.a.players[0]);
   setValueIfIdle(elements.teams.aPlayer2, state.teams.a.players[1]);
+  setValueIfIdle(elements.teams.aImageUrl, state.teams.a.imageUrl || "");
   setValueIfIdle(elements.teams.bLabel, state.teams.b.displayName);
   setValueIfIdle(elements.teams.bPlayer1, state.teams.b.players[0]);
   setValueIfIdle(elements.teams.bPlayer2, state.teams.b.players[1]);
+  setValueIfIdle(elements.teams.bImageUrl, state.teams.b.imageUrl || "");
 
   setValueIfIdle(elements.directScoreA, currentGame.scoreA);
   setValueIfIdle(elements.directScoreB, currentGame.scoreB);
@@ -139,6 +172,7 @@ function render(state) {
 
   elements.nextGameButton.disabled = !state.summary.canStartNextGame;
   elements.undoButton.disabled = state.meta.undoDepth < 1;
+  elements.endFinalsButton.disabled = !state.presentation?.finalsActive;
 }
 
 async function postJson(url, payload = {}) {
@@ -158,6 +192,22 @@ async function postJson(url, payload = {}) {
   return response.json();
 }
 
+async function handleImageFileSelection(fileInput, targetInput) {
+  const [file] = fileInput.files || [];
+  if (!file) {
+    return;
+  }
+
+  targetInput.value = await readFileAsDataUrl(file);
+}
+
+function setTemporaryDisabled(button, duration = 600) {
+  button.disabled = true;
+  window.setTimeout(() => {
+    button.disabled = false;
+  }, duration);
+}
+
 function attachEvents() {
   elements.settingsForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -169,12 +219,26 @@ function attachEvents() {
       totalGames: Number(elements.settings.totalGames.value),
       pointsToWin: Number(elements.settings.pointsToWin.value),
       winBy: Number(elements.settings.winBy.value),
-      hardCap: Number(elements.settings.hardCap.value)
+      hardCap: Number(elements.settings.hardCap.value),
+      logoUrl: elements.settings.logoUrl.value,
+      showLogo: elements.settings.showLogo.checked
     });
   });
 
   elements.settings.gameType.addEventListener("change", () => {
     updateVisibility(elements.settings.gameType.value);
+  });
+
+  elements.settings.logoFile.addEventListener("change", async () => {
+    await handleImageFileSelection(elements.settings.logoFile, elements.settings.logoUrl);
+  });
+
+  elements.teams.aImageFile.addEventListener("change", async () => {
+    await handleImageFileSelection(elements.teams.aImageFile, elements.teams.aImageUrl);
+  });
+
+  elements.teams.bImageFile.addEventListener("change", async () => {
+    await handleImageFileSelection(elements.teams.bImageFile, elements.teams.bImageUrl);
   });
 
   elements.teamsForm.addEventListener("submit", async (event) => {
@@ -183,13 +247,25 @@ function attachEvents() {
     await postJson("/api/teams", {
       a: {
         displayName: elements.teams.aLabel.value,
-        players: [elements.teams.aPlayer1.value, elements.teams.aPlayer2.value]
+        players: [elements.teams.aPlayer1.value, elements.teams.aPlayer2.value],
+        imageUrl: elements.teams.aImageUrl.value
       },
       b: {
         displayName: elements.teams.bLabel.value,
-        players: [elements.teams.bPlayer1.value, elements.teams.bPlayer2.value]
+        players: [elements.teams.bPlayer1.value, elements.teams.bPlayer2.value],
+        imageUrl: elements.teams.bImageUrl.value
       }
     });
+  });
+
+  elements.triggerFinalsButton.addEventListener("click", async () => {
+    setTemporaryDisabled(elements.triggerFinalsButton);
+    await postJson("/api/finals/trigger");
+  });
+
+  elements.endFinalsButton.addEventListener("click", async () => {
+    setTemporaryDisabled(elements.endFinalsButton);
+    await postJson("/api/finals/end");
   });
 
   for (const button of document.querySelectorAll(".score-button")) {

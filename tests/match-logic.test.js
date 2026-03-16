@@ -5,7 +5,8 @@ const {
   applyScoreDelta,
   createDefaultState,
   setCurrentGameScore,
-  startNextGame
+  startNextGame,
+  updateTeams
 } = require("../src/match-logic");
 
 test("a game is won at 21-19 by default", () => {
@@ -57,4 +58,19 @@ test("score buttons stop changing a completed game until the next one is started
   state = applyScoreDelta(state, "b", 1);
 
   assert.equal(state.games[0].scoreB, 9);
+});
+
+test("team updates keep finals image URLs in state", () => {
+  const state = applyDerivedState(createDefaultState());
+  const updated = updateTeams(state, {
+    a: {
+      imageUrl: "https://example.com/left.png"
+    },
+    b: {
+      imageUrl: "https://example.com/right.png"
+    }
+  });
+
+  assert.equal(updated.teams.a.imageUrl, "https://example.com/left.png");
+  assert.equal(updated.teams.b.imageUrl, "https://example.com/right.png");
 });
