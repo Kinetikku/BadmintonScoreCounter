@@ -1,0 +1,22 @@
+﻿name = "badminton-scoreboard-live"
+main = "./cloudflare/src/worker.mjs"
+compatibility_date = "2026-03-17"
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = [ "/", "/admin", "/overlay", "/finals", "/login", "/logout", "/api/*" ]
+not_found_handling = "404-page"
+
+[durable_objects]
+bindings = [
+  { name = "MATCH_ROOM", class_name = "MatchRoom" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MatchRoom"]
+
+[observability]
+enabled = true

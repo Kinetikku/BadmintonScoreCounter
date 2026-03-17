@@ -110,6 +110,59 @@ async function readFileAsDataUrl(file) {
   });
 }
 
+async function tryUploadImageFile(file, assetKind) {
+  const formData = new FormData();
+  formData.append("file", file, file.name || `${assetKind}.png`);
+  formData.append("assetKind", assetKind);
+
+  let response;
+
+  try {
+    response = await fetch("/api/uploads/image", {
+      method: "POST",
+      body: formData
+    });
+  } catch {
+    return null;
+  }
+
+  if (response.status === 404 || response.status === 405 || response.status === 501) {
+    return null;
+  }
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    console.warn("Cloud image upload failed; falling back to local data URL.", payload.error || response.statusText);
+    return null;
+  }
+
+  return typeof payload.secureUrl === "string" ? payload.secureUrl : null;
+}
+
+async function resolveImageValue(fileInput, targetInput, assetKind) {
+  const [file] = fileInput.files || [];
+
+  if (!file) {
+    return targetInput.value;
+  }
+
+  const uploadedUrl = await tryUploadImageFile(file, assetKind);
+
+  if (uploadedUrl) {
+    targetInput.value = uploadedUrl;
+    fileInput.value = "";
+    return uploadedUrl;
+  }
+
+  if (!targetInput.value) {
+    targetInput.value = await readFileAsDataUrl(file);
+  }
+
+  fileInput.value = "";
+  return targetInput.value;
+}
+
 function updateVisibility(gameType) {
   const isDoubles = gameType === "doubles";
   for (const block of elements.doublesOnly) {
@@ -212,6 +265,8 @@ function attachEvents() {
   elements.settingsForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
+    const logoUrl = await resolveImageValue(elements.settings.logoFile, elements.settings.logoUrl, "event-logo");
+
     await postJson("/api/settings", {
       eventName: elements.settings.eventName.value,
       courtName: elements.settings.courtName.value,
@@ -220,7 +275,7 @@ function attachEvents() {
       pointsToWin: Number(elements.settings.pointsToWin.value),
       winBy: Number(elements.settings.winBy.value),
       hardCap: Number(elements.settings.hardCap.value),
-      logoUrl: elements.settings.logoUrl.value,
+      logoUrl,
       showLogo: elements.settings.showLogo.checked
     });
   });
@@ -244,16 +299,19 @@ function attachEvents() {
   elements.teamsForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
+    const teamAImageUrl = await resolveImageValue(elements.teams.aImageFile, elements.teams.aImageUrl, "team-a");
+    const teamBImageUrl = await resolveImageValue(elements.teams.bImageFile, elements.teams.bImageUrl, "team-b");
+
     await postJson("/api/teams", {
       a: {
         displayName: elements.teams.aLabel.value,
         players: [elements.teams.aPlayer1.value, elements.teams.aPlayer2.value],
-        imageUrl: elements.teams.aImageUrl.value
+        imageUrl: teamAImageUrl
       },
       b: {
         displayName: elements.teams.bLabel.value,
         players: [elements.teams.bPlayer1.value, elements.teams.bPlayer2.value],
-        imageUrl: elements.teams.bImageUrl.value
+        imageUrl: teamBImageUrl
       }
     });
   });

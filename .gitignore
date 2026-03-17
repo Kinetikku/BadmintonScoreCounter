@@ -50,6 +50,9 @@ bower_components
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 data/match-state.json
 
 # TypeScript and package artifacts

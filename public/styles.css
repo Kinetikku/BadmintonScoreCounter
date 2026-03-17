@@ -444,10 +444,14 @@ button:disabled {
   font-size: 1.7rem;
 }
 
+html.overlay-page,
+body.overlay-body {
+  background: transparent !important;
+}
+
 body.overlay-body {
   width: fit-content;
   height: fit-content;
-  background: transparent;
   overflow: hidden;
 }
 
@@ -824,18 +828,54 @@ body.finals-body {
   .admin-grid,
   .two-column,
   .settings-grid,
-  .compact-scoreboard-grid {
+  .compact-scoreboard-grid,
+  .score-card__controls {
     grid-template-columns: 1fr;
   }
 
   .admin-header,
+  .section-heading,
+  .section-heading--stacked,
   .inline-form,
-  .section-heading {
+  .button-cluster,
+  .actions-row,
+  .scoring-actions,
+  .overlay-link-list {
+    display: grid;
+    width: 100%;
+    gap: 12px;
     align-items: stretch;
   }
 
+  .admin-header {
+    justify-content: initial;
+  }
+
   .overlay-link-group {
+    width: 100%;
     justify-items: stretch;
+  }
+
+  .overlay-link {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .button-cluster {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-media {
+    grid-column: auto;
+  }
+
+  .button-cluster button,
+  .actions-row button,
+  .scoring-actions button,
+  .inline-form button,
+  .score-card__controls button {
+    width: 100%;
+    min-width: 0;
   }
 }
 
@@ -884,6 +924,73 @@ body.finals-body {
     border-radius: 22px;
   }
 
+  .stack,
+  .form-grid,
+  .team-fieldset,
+  .image-input-group {
+    gap: 12px;
+  }
+
+  .section-heading,
+  .section-heading--stacked,
+  .inline-form,
+  .button-cluster,
+  .actions-row,
+  .scoring-actions {
+    display: grid;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .button-cluster button,
+  .actions-row button,
+  .scoring-actions button,
+  .inline-form button {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+  }
+
+  .compact-scoreboard-grid {
+    gap: 12px;
+  }
+
+  .score-card {
+    gap: 12px;
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .score-card__name {
+    font-size: 1rem;
+  }
+
+  .score-card__value {
+    font-size: clamp(2.6rem, 16vw, 3.6rem);
+  }
+
+  .score-card__controls {
+    gap: 10px;
+  }
+
+  .score-card__controls button {
+    min-height: 48px;
+  }
+
+  .inline-score-inputs {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .inline-score-inputs input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .score-separator {
+    font-size: 1.9rem;
+  }
+
   .overlay-board--compact {
     width: min(500px, 100vw);
   }
@@ -900,17 +1007,11 @@ body.finals-body {
   .overlay-box {
     font-size: 1.15rem;
   }
-
-  .button-cluster,
-  .actions-row {
-    width: 100%;
-  }
-
-  .button-cluster button,
-  .actions-row button {
-    flex: 1 1 100%;
-  }
 }
+
+
+
+
 
 
 

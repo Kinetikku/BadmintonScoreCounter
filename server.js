@@ -3,19 +3,22 @@ const path = require("node:path");
 const http = require("node:http");
 const os = require("node:os");
 const {
-  applyDerivedState,
   applyScoreDelta,
   createDefaultState,
   endFinalsAnimation,
-  prepareUndoSnapshot,
   resetMatch,
   setCurrentGameScore,
   startNextGame,
-  toPublicState,
   triggerFinalsAnimation,
   updateSettings,
   updateTeams
 } = require("./src/match-logic");
+const {
+  applyManagedMutation,
+  applyManagedUndo,
+  getPublicState,
+  hydrateState
+} = require("./src/shared/match-state-store");
 
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || "0.0.0.0";
@@ -39,16 +42,16 @@ let state = loadState();
 function loadState() {
   try {
     if (!fs.existsSync(STATE_FILE)) {
-      const freshState = applyDerivedState(createDefaultState());
+      const freshState = hydrateState(createDefaultState());
       fs.writeFileSync(STATE_FILE, JSON.stringify(freshState, null, 2));
       return freshState;
     }
 
     const parsed = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
-    return applyDerivedState(parsed);
+    return hydrateState(parsed);
   } catch (error) {
     console.warn("Could not load saved state, starting fresh.", error);
-    return applyDerivedState(createDefaultState());
+    return hydrateState(createDefaultState());
   }
 }
 
@@ -57,7 +60,7 @@ function saveState() {
 }
 
 function broadcastState() {
-  const payload = `data: ${JSON.stringify(toPublicState(state))}\n\n`;
+  const payload = `data: ${JSON.stringify(getPublicState(state))}\n\n`;
 
   for (const client of clients) {
     client.write(payload);
@@ -65,32 +68,17 @@ function broadcastState() {
 }
 
 function mutateState(mutator) {
-  const snapshot = prepareUndoSnapshot(state);
-  const nextState = mutator(structuredClone(state));
-
-  state = applyDerivedState(nextState);
-  state.history = [...(state.history || []), snapshot].slice(-50);
-
+  state = applyManagedMutation(state, mutator);
   saveState();
   broadcastState();
-
-  return toPublicState(state);
+  return getPublicState(state);
 }
 
 function undoState() {
-  if (!state.history.length) {
-    return toPublicState(state);
-  }
-
-  const previous = state.history[state.history.length - 1];
-  const remainingHistory = state.history.slice(0, -1);
-  state = applyDerivedState(previous);
-  state.history = remainingHistory;
-
+  state = applyManagedUndo(state);
   saveState();
   broadcastState();
-
-  return toPublicState(state);
+  return getPublicState(state);
 }
 
 function sendJson(response, statusCode, payload) {
@@ -112,7 +100,7 @@ function sendFile(response, filePath) {
       "Cache-Control": extension === ".html" ? "no-store" : "public, max-age=300"
     });
     response.end(fileBuffer);
-  } catch (error) {
+  } catch {
     sendJson(response, 404, { error: "Not found" });
   }
 }
@@ -137,7 +125,7 @@ function parseBody(request) {
 
       try {
         resolve(JSON.parse(body));
-      } catch (error) {
+      } catch {
         reject(new Error("Invalid JSON body."));
       }
     });
@@ -186,7 +174,7 @@ const server = http.createServer(async (request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host || `localhost:${PORT}`}`);
 
   if (request.method === "GET" && requestUrl.pathname === "/api/state") {
-    sendJson(response, 200, toPublicState(state));
+    sendJson(response, 200, getPublicState(state));
     return;
   }
 
@@ -197,7 +185,7 @@ const server = http.createServer(async (request, response) => {
       Connection: "keep-alive"
     });
     response.write("retry: 1000\n");
-    response.write(`data: ${JSON.stringify(toPublicState(state))}\n\n`);
+    response.write(`data: ${JSON.stringify(getPublicState(state))}\n\n`);
     clients.add(response);
 
     request.on("close", () => {
@@ -211,8 +199,7 @@ const server = http.createServer(async (request, response) => {
   if (request.method === "POST" && requestUrl.pathname === "/api/settings") {
     try {
       const payload = await parseBody(request);
-      const publicState = mutateState((draft) => updateSettings(draft, payload));
-      sendJson(response, 200, publicState);
+      sendJson(response, 200, mutateState((draft) => updateSettings(draft, payload)));
     } catch (error) {
       sendJson(response, 400, { error: error.message });
     }
@@ -222,8 +209,7 @@ const server = http.createServer(async (request, response) => {
   if (request.method === "POST" && requestUrl.pathname === "/api/teams") {
     try {
       const payload = await parseBody(request);
-      const publicState = mutateState((draft) => updateTeams(draft, payload));
-      sendJson(response, 200, publicState);
+      sendJson(response, 200, mutateState((draft) => updateTeams(draft, payload)));
     } catch (error) {
       sendJson(response, 400, { error: error.message });
     }
@@ -231,14 +217,12 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && requestUrl.pathname === "/api/finals/trigger") {
-    const publicState = mutateState((draft) => triggerFinalsAnimation(draft));
-    sendJson(response, 200, publicState);
+    sendJson(response, 200, mutateState((draft) => triggerFinalsAnimation(draft)));
     return;
   }
 
   if (request.method === "POST" && requestUrl.pathname === "/api/finals/end") {
-    const publicState = mutateState((draft) => endFinalsAnimation(draft));
-    sendJson(response, 200, publicState);
+    sendJson(response, 200, mutateState((draft) => endFinalsAnimation(draft)));
     return;
   }
 
@@ -265,16 +249,14 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && requestUrl.pathname === "/api/game/next") {
-    const publicState = mutateState((draft) => startNextGame(draft));
-    sendJson(response, 200, publicState);
+    sendJson(response, 200, mutateState((draft) => startNextGame(draft)));
     return;
   }
 
   if (request.method === "POST" && requestUrl.pathname === "/api/match/reset") {
     try {
       const payload = await parseBody(request);
-      const publicState = mutateState((draft) => resetMatch(draft, payload));
-      sendJson(response, 200, publicState);
+      sendJson(response, 200, mutateState((draft) => resetMatch(draft, payload)));
     } catch (error) {
       sendJson(response, 400, { error: error.message });
     }
@@ -310,8 +292,3 @@ server.listen(PORT, HOST, () => {
     console.log(`- Finals: ${url}/finals`);
   }
 });
-
-
-
-
-
