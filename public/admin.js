@@ -29,6 +29,8 @@
     hardCap: document.querySelector("#hard-cap"),
     logoUrl: document.querySelector("#logo-url"),
     logoFile: document.querySelector("#logo-file"),
+    logoLibraryButton: document.querySelector("#logo-library-button"),
+    logoLibrary: document.querySelector("#logo-library"),
     showLogo: document.querySelector("#show-logo")
   },
   teams: {
@@ -37,14 +39,56 @@
     aPlayer2: document.querySelector("#team-a-player-2"),
     aImageUrl: document.querySelector("#team-a-image-url"),
     aImageFile: document.querySelector("#team-a-image-file"),
+    aLibraryButton: document.querySelector("#team-a-library-button"),
+    aLibrary: document.querySelector("#team-a-library"),
     bLabel: document.querySelector("#team-b-label"),
     bPlayer1: document.querySelector("#team-b-player-1"),
     bPlayer2: document.querySelector("#team-b-player-2"),
     bImageUrl: document.querySelector("#team-b-image-url"),
-    bImageFile: document.querySelector("#team-b-image-file")
+    bImageFile: document.querySelector("#team-b-image-file"),
+    bLibraryButton: document.querySelector("#team-b-library-button"),
+    bLibrary: document.querySelector("#team-b-library")
   },
   doublesOnly: Array.from(document.querySelectorAll("[data-doubles-only]"))
 };
+
+let cloudinaryAssetsCache = null;
+let cloudinaryLibraryUnavailable = false;
+let toastTimer = 0;
+let toastContainer = null;
+function ensureToastContainer() {
+  if (toastContainer) {
+    return toastContainer;
+  }
+
+  toastContainer = document.createElement("div");
+  toastContainer.className = "admin-toast";
+  toastContainer.setAttribute("aria-live", "polite");
+  toastContainer.hidden = true;
+  document.body.append(toastContainer);
+  return toastContainer;
+}
+
+function showToast(message) {
+  const container = ensureToastContainer();
+  container.textContent = message;
+  container.hidden = false;
+  container.classList.add("is-visible");
+
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => {
+    container.classList.remove("is-visible");
+    container.hidden = true;
+  }, 2600);
+}
+
+function getAssetLibraryPairs() {
+  return [
+    { button: elements.settings.logoLibraryButton, panel: elements.settings.logoLibrary },
+    { button: elements.teams.aLibraryButton, panel: elements.teams.aLibrary },
+    { button: elements.teams.bLibraryButton, panel: elements.teams.bLibrary }
+  ];
+}
 
 function setValueIfIdle(input, value) {
   if (document.activeElement === input) {
@@ -137,6 +181,8 @@ async function tryUploadImageFile(file, assetKind) {
     return null;
   }
 
+  cloudinaryAssetsCache = null;
+  cloudinaryLibraryUnavailable = false;
   return typeof payload.secureUrl === "string" ? payload.secureUrl : null;
 }
 
@@ -161,6 +207,150 @@ async function resolveImageValue(fileInput, targetInput, assetKind) {
 
   fileInput.value = "";
   return targetInput.value;
+}
+
+async function fetchCloudinaryAssets(forceRefresh = false) {
+  if (!forceRefresh && cloudinaryAssetsCache) {
+    return cloudinaryAssetsCache;
+  }
+
+  if (cloudinaryLibraryUnavailable) {
+    return null;
+  }
+
+  let response;
+
+  try {
+    response = await fetch("/api/uploads/image");
+  } catch {
+    cloudinaryLibraryUnavailable = true;
+    return null;
+  }
+
+  if (response.status === 404 || response.status === 405 || response.status === 501) {
+    cloudinaryLibraryUnavailable = true;
+    return null;
+  }
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || "Could not load Cloudinary images.");
+  }
+
+  cloudinaryAssetsCache = Array.isArray(payload.resources)
+    ? payload.resources.slice().sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt))
+    : [];
+  cloudinaryLibraryUnavailable = false;
+  return cloudinaryAssetsCache;
+}
+
+function formatAssetDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  }).format(date);
+}
+
+function hideAssetLibrary(panel, button) {
+  if (!panel) {
+    return;
+  }
+
+  panel.hidden = true;
+  if (button) {
+    button.textContent = "Choose existing Cloudinary image";
+  }
+}
+
+function closeAllAssetLibraries() {
+  for (const pair of getAssetLibraryPairs()) {
+    hideAssetLibrary(pair.panel, pair.button);
+  }
+}
+
+function renderAssetLibrary(panel, assets, targetInput, fileInput, button) {
+  if (!panel) {
+    return;
+  }
+
+  if (assets === null) {
+    panel.innerHTML = `
+      <p class="asset-library__empty">
+        Cloudinary image browsing is only available on the deployed cloud version.
+      </p>
+    `;
+    panel.hidden = false;
+    return;
+  }
+
+  if (!assets.length) {
+    panel.innerHTML = `
+      <p class="asset-library__empty">
+        No previously uploaded Cloudinary images were found yet.
+      </p>
+    `;
+    panel.hidden = false;
+    return;
+  }
+
+  const selectedUrl = targetInput.value;
+
+  panel.innerHTML = `
+    <div class="asset-library__header">
+      <p class="asset-library__title">Recent Cloudinary uploads</p>
+      <button class="ghost-button asset-library-refresh" type="button">Refresh</button>
+    </div>
+    <div class="asset-library__grid">
+      ${assets.map((asset) => {
+        const isSelected = asset.secureUrl === selectedUrl;
+        return `
+          <article class="asset-tile${isSelected ? " is-selected" : ""}" data-secure-url="${asset.secureUrl}">
+            <img class="asset-tile__image" src="${asset.thumbnailUrl}" alt="${asset.publicId}">
+            <div class="asset-tile__body">
+              <strong class="asset-tile__name">${asset.publicId}</strong>
+              <span class="asset-tile__meta">${formatAssetDate(asset.createdAt)}</span>
+            </div>
+            <button class="secondary-button asset-tile__button${isSelected ? " is-selected" : ""}" type="button" data-secure-url="${asset.secureUrl}">
+              ${isSelected ? "Selected" : "Use this image"}
+            </button>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  panel.hidden = false;
+
+  for (const useButton of panel.querySelectorAll(".asset-tile__button")) {
+    useButton.addEventListener("click", () => {
+      targetInput.value = useButton.dataset.secureUrl || "";
+      if (fileInput) {
+        fileInput.value = "";
+      }
+      showToast("Image updated locally. Click Save to confirm the change.");
+      renderAssetLibrary(panel, assets, targetInput, fileInput, button);
+      if (button) {
+        button.textContent = "Hide Cloudinary images";
+      }
+    });
+  }
+
+  const refreshButton = panel.querySelector(".asset-library-refresh");
+  refreshButton?.addEventListener("click", async () => {
+    const freshAssets = await fetchCloudinaryAssets(true);
+    renderAssetLibrary(panel, freshAssets, targetInput, fileInput, button);
+  });
 }
 
 function updateVisibility(gameType) {
@@ -261,6 +451,26 @@ function setTemporaryDisabled(button, duration = 600) {
   }, duration);
 }
 
+function bindAssetLibrary(button, panel, targetInput, fileInput) {
+  button?.addEventListener("click", async () => {
+    if (!panel.hidden) {
+      closeAllAssetLibraries();
+      return;
+    }
+
+    closeAllAssetLibraries();
+    button.textContent = "Loading Cloudinary images...";
+    const assets = await fetchCloudinaryAssets();
+    renderAssetLibrary(panel, assets, targetInput, fileInput, button);
+    button.textContent = panel.hidden ? "Choose existing Cloudinary image" : "Hide Cloudinary images";
+  });
+}
+
+function showActionToast(message) {
+  closeAllAssetLibraries();
+  showToast(message);
+}
+
 function attachEvents() {
   elements.settingsForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -278,6 +488,8 @@ function attachEvents() {
       logoUrl,
       showLogo: elements.settings.showLogo.checked
     });
+
+    showActionToast("Settings saved.");
   });
 
   elements.settings.gameType.addEventListener("change", () => {
@@ -295,6 +507,25 @@ function attachEvents() {
   elements.teams.bImageFile.addEventListener("change", async () => {
     await handleImageFileSelection(elements.teams.bImageFile, elements.teams.bImageUrl);
   });
+
+  bindAssetLibrary(
+    elements.settings.logoLibraryButton,
+    elements.settings.logoLibrary,
+    elements.settings.logoUrl,
+    elements.settings.logoFile
+  );
+  bindAssetLibrary(
+    elements.teams.aLibraryButton,
+    elements.teams.aLibrary,
+    elements.teams.aImageUrl,
+    elements.teams.aImageFile
+  );
+  bindAssetLibrary(
+    elements.teams.bLibraryButton,
+    elements.teams.bLibrary,
+    elements.teams.bImageUrl,
+    elements.teams.bImageFile
+  );
 
   elements.teamsForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -314,16 +545,20 @@ function attachEvents() {
         imageUrl: teamBImageUrl
       }
     });
+
+    showActionToast("Names and images saved.");
   });
 
   elements.triggerFinalsButton.addEventListener("click", async () => {
     setTemporaryDisabled(elements.triggerFinalsButton);
     await postJson("/api/finals/trigger");
+    showActionToast("Finals animation started.");
   });
 
   elements.endFinalsButton.addEventListener("click", async () => {
     setTemporaryDisabled(elements.endFinalsButton);
     await postJson("/api/finals/end");
+    showActionToast("Finals animation ended.");
   });
 
   for (const button of document.querySelectorAll(".score-button")) {
@@ -332,6 +567,7 @@ function attachEvents() {
         team: button.dataset.team,
         delta: Number(button.dataset.delta)
       });
+      showActionToast("Score updated.");
     });
   }
 
@@ -342,14 +578,18 @@ function attachEvents() {
       teamAScore: Number(elements.directScoreA.value),
       teamBScore: Number(elements.directScoreB.value)
     });
+
+    showActionToast("Exact score applied.");
   });
 
   elements.nextGameButton.addEventListener("click", async () => {
     await postJson("/api/game/next");
+    showActionToast("Next game started.");
   });
 
   elements.undoButton.addEventListener("click", async () => {
     await postJson("/api/undo");
+    showActionToast("Last action undone.");
   });
 
   elements.resetButton.addEventListener("click", async () => {
@@ -362,6 +602,8 @@ function attachEvents() {
       keepSettings: true,
       keepTeams: true
     });
+
+    showActionToast("Match reset.");
   });
 }
 
@@ -380,3 +622,12 @@ boot().catch((error) => {
   console.error(error);
   window.alert(error.message);
 });
+
+
+
+
+
+
+
+
+

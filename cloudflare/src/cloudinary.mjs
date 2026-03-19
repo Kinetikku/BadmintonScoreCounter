@@ -4,8 +4,25 @@
   }
 }
 
+function buildBasicAuthHeader(env) {
+  const credentials = `${env.CLOUDINARY_API_KEY}:${env.CLOUDINARY_API_SECRET}`;
+  return `Basic ${btoa(credentials)}`;
+}
+
 function buildUploadUrl(cloudName) {
   return `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+}
+
+function buildResourcesUrl(cloudName, query = {}) {
+  const url = new URL(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload`);
+
+  for (const [key, value] of Object.entries(query)) {
+    if (typeof value !== "undefined" && value !== null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  }
+
+  return url;
 }
 
 function sanitizeAssetKind(value) {
@@ -31,11 +48,10 @@ async function uploadImageToCloudinary(request, env) {
   uploadBody.set("use_filename", "true");
   uploadBody.set("unique_filename", "true");
 
-  const credentials = `${env.CLOUDINARY_API_KEY}:${env.CLOUDINARY_API_SECRET}`;
   const response = await fetch(buildUploadUrl(env.CLOUDINARY_CLOUD_NAME), {
     method: "POST",
     headers: {
-      Authorization: `Basic ${btoa(credentials)}`
+      Authorization: buildBasicAuthHeader(env)
     },
     body: uploadBody
   });
@@ -56,4 +72,40 @@ async function uploadImageToCloudinary(request, env) {
   };
 }
 
-export { requireCloudinary, uploadImageToCloudinary };
+async function listCloudinaryImages(env) {
+  requireCloudinary(env);
+
+  const response = await fetch(buildResourcesUrl(env.CLOUDINARY_CLOUD_NAME, {
+    max_results: 40,
+    prefix: "badminton-scoreboard-live"
+  }), {
+    headers: {
+      Authorization: buildBasicAuthHeader(env)
+    }
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error?.message || "Could not load Cloudinary images.");
+  }
+
+  return {
+    nextCursor: payload.next_cursor || null,
+    resources: Array.isArray(payload.resources)
+      ? payload.resources.map((resource) => ({
+          assetId: resource.asset_id,
+          bytes: resource.bytes,
+          createdAt: resource.created_at,
+          format: resource.format,
+          height: resource.height,
+          publicId: resource.public_id,
+          secureUrl: resource.secure_url,
+          thumbnailUrl: resource.secure_url,
+          width: resource.width
+        }))
+      : []
+  };
+}
+
+export { listCloudinaryImages, requireCloudinary, uploadImageToCloudinary };

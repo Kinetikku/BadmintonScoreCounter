@@ -144,6 +144,8 @@ function renderAdminAppPage() {
                     <span>Upload logo file</span>
                     <input id="logo-file" type="file" accept="image/*">
                   </label>
+                  <button id="logo-library-button" class="ghost-button asset-library-toggle" type="button">Choose existing Cloudinary image</button>
+                  <div id="logo-library" class="asset-library" hidden></div>
                   <label class="checkbox-field">
                     <input id="show-logo" name="showLogo" type="checkbox">
                     <span>Display logo on finals overlay</span>
@@ -196,6 +198,8 @@ function renderAdminAppPage() {
                     <span>Upload local file</span>
                     <input id="team-a-image-file" type="file" accept="image/*">
                   </label>
+                  <button id="team-a-library-button" class="ghost-button asset-library-toggle" type="button">Choose existing Cloudinary image</button>
+                  <div id="team-a-library" class="asset-library" hidden></div>
                 </div>
               </fieldset>
 
@@ -222,13 +226,15 @@ function renderAdminAppPage() {
                     <span>Upload local file</span>
                     <input id="team-b-image-file" type="file" accept="image/*">
                   </label>
+                  <button id="team-b-library-button" class="ghost-button asset-library-toggle" type="button">Choose existing Cloudinary image</button>
+                  <div id="team-b-library" class="asset-library" hidden></div>
                 </div>
               </fieldset>
             </div>
 
             <div class="actions-row">
               <button class="primary-button" type="submit">Save names and images</button>
-              <p class="helper-text">Paste an image URL or choose a local file. Local files are converted into saved data URLs when you click save.</p>
+              <p class="helper-text">Paste an image URL, pick a local file, or reuse a previously uploaded Cloudinary image.</p>
             </div>
           </form>
         </section>
@@ -377,5 +383,9 @@ export {
   renderOverlayAppPage,
   routeKind
 };
+
+
+
+
 
 

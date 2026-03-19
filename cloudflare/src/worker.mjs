@@ -1,5 +1,5 @@
 ﻿import { buildLogoutCookie, buildSessionCookie, createSessionCookie, readSession, requireSecrets } from "./auth.mjs";
-import { uploadImageToCloudinary } from "./cloudinary.mjs";
+import { listCloudinaryImages, uploadImageToCloudinary } from "./cloudinary.mjs";
 import { MatchRoom } from "./match-room.mjs";
 import {
   extractMatchId,
@@ -168,12 +168,25 @@ function parseApiTarget(pathname) {
 }
 
 async function handleUploadRequest(request, env) {
-  const uploaded = await uploadImageToCloudinary(request, env);
-  return Response.json(uploaded, {
-    headers: {
-      "Cache-Control": "no-store"
-    }
-  });
+  if (request.method === "GET") {
+    const assets = await listCloudinaryImages(env);
+    return Response.json(assets, {
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    });
+  }
+
+  if (request.method === "POST") {
+    const uploaded = await uploadImageToCloudinary(request, env);
+    return Response.json(uploaded, {
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    });
+  }
+
+  return new Response("Method not allowed", { status: 405 });
 }
 
 async function handleApiRequest(request, env) {
@@ -275,3 +288,4 @@ export default {
     return new Response("Not found", { status: 404 });
   }
 };
+
