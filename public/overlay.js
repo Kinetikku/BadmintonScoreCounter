@@ -4,24 +4,18 @@
 
 const BOX_COUNT = 3;
 
-function getLastName(name) {
-  const trimmed = String(name || "").trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  const parts = trimmed.split(/\s+/);
-  return parts[parts.length - 1];
+function formatPlayerName(name) {
+  return String(name || "").trim();
 }
 
 function getOverlayName(team, gameType) {
   const visiblePlayers = team.players
     .filter(Boolean)
     .slice(0, gameType === "doubles" ? 2 : 1)
-    .map(getLastName)
+    .map(formatPlayerName)
     .filter(Boolean);
 
-  return visiblePlayers.join("/") || team.displayName;
+  return visiblePlayers.join(" / ") || team.displayName;
 }
 
 function buildScoreCells(state, teamKey) {
@@ -80,5 +74,6 @@ async function bootOverlay() {
 bootOverlay().catch((error) => {
   console.error(error);
 });
+
 
 

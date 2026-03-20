@@ -415,7 +415,6 @@ function render(state) {
 
   elements.nextGameButton.disabled = !state.summary.canStartNextGame;
   elements.undoButton.disabled = state.meta.undoDepth < 1;
-  elements.endFinalsButton.disabled = !state.presentation?.finalsActive;
 }
 
 async function postJson(url, payload = {}) {
