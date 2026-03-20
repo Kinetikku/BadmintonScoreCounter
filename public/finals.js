@@ -1,14 +1,30 @@
 ﻿const elements = {
   shell: document.querySelector("#finals-shell"),
-  nameA: document.querySelector("#finals-name-a"),
-  nameB: document.querySelector("#finals-name-b"),
-  imageA: document.querySelector("#finals-image-a"),
-  imageB: document.querySelector("#finals-image-b"),
+  logoBadge: document.querySelector("#finals-logo-badge"),
   logo: document.querySelector("#finals-logo"),
   eventName: document.querySelector("#finals-event-name"),
   division: document.querySelector("#finals-division"),
   gameType: document.querySelector("#finals-game-type"),
-  totalGames: document.querySelector("#finals-total-games")
+  nameA: document.querySelector("#finals-name-a"),
+  nameB: document.querySelector("#finals-name-b"),
+  imageA: document.querySelector("#finals-image-a"),
+  imageB: document.querySelector("#finals-image-b"),
+  profile: {
+    a: {
+      racket: document.querySelector("#finals-a-racket"),
+      age: document.querySelector("#finals-a-age"),
+      hand: document.querySelector("#finals-a-hand"),
+      nationality: document.querySelector("#finals-a-nationality"),
+      club: document.querySelector("#finals-a-club")
+    },
+    b: {
+      racket: document.querySelector("#finals-b-racket"),
+      age: document.querySelector("#finals-b-age"),
+      hand: document.querySelector("#finals-b-hand"),
+      nationality: document.querySelector("#finals-b-nationality"),
+      club: document.querySelector("#finals-b-club")
+    }
+  }
 };
 
 const ENTRY_DURATION_MS = 1500;
@@ -50,7 +66,7 @@ function buildAssetUrl(url, version) {
   }
 }
 
-function setImage(targetImage, url, version) {
+function setImage(targetImage, url, version, container = null) {
   if (url) {
     const nextSrc = buildAssetUrl(url, version);
 
@@ -61,11 +77,29 @@ function setImage(targetImage, url, version) {
     }
 
     targetImage.hidden = false;
+    if (container) {
+      container.hidden = false;
+    }
   } else {
     targetImage.removeAttribute("src");
     delete targetImage.dataset.assetSrc;
     targetImage.hidden = true;
+    if (container) {
+      container.hidden = true;
+    }
   }
+}
+
+function setFact(target, value) {
+  target.textContent = typeof value === "string" ? value.trim() : "";
+}
+
+function renderProfile(targets, profile = {}) {
+  setFact(targets.racket, profile.racket);
+  setFact(targets.age, profile.age);
+  setFact(targets.hand, profile.hand);
+  setFact(targets.nationality, profile.nationality);
+  setFact(targets.club, profile.club);
 }
 
 function clearTimers() {
@@ -127,10 +161,11 @@ function renderFinals(state) {
   elements.eventName.textContent = state.settings.eventName || "Upcoming Match";
   elements.division.textContent = state.settings.courtName || "Open Division";
   elements.gameType.textContent = formatGameType(state.settings.gameType);
-  elements.totalGames.textContent = String(state.settings.totalGames || "");
+  renderProfile(elements.profile.a, state.teams.a.profile || {});
+  renderProfile(elements.profile.b, state.teams.b.profile || {});
   setImage(elements.imageA, state.teams.a.imageUrl, state.teams.a.imageVersion);
   setImage(elements.imageB, state.teams.b.imageUrl, state.teams.b.imageVersion);
-  setImage(elements.logo, state.settings.showLogo ? state.settings.logoUrl : "", state.settings.logoVersion);
+  setImage(elements.logo, state.settings.showLogo ? state.settings.logoUrl : "", state.settings.logoVersion, elements.logoBadge);
 
   if (lastTrigger === null) {
     lastTrigger = triggerCount;
@@ -180,6 +215,7 @@ elements.imageB.addEventListener("error", () => {
 
 elements.logo.addEventListener("error", () => {
   elements.logo.hidden = true;
+  elements.logoBadge.hidden = true;
 });
 
 bootFinals().catch((error) => {

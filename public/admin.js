@@ -41,13 +41,23 @@
     aImageFile: document.querySelector("#team-a-image-file"),
     aLibraryButton: document.querySelector("#team-a-library-button"),
     aLibrary: document.querySelector("#team-a-library"),
+    aRacket: document.querySelector("#team-a-racket"),
+    aAge: document.querySelector("#team-a-age"),
+    aHand: document.querySelector("#team-a-hand"),
+    aNationality: document.querySelector("#team-a-nationality"),
+    aClub: document.querySelector("#team-a-club"),
     bLabel: document.querySelector("#team-b-label"),
     bPlayer1: document.querySelector("#team-b-player-1"),
     bPlayer2: document.querySelector("#team-b-player-2"),
     bImageUrl: document.querySelector("#team-b-image-url"),
     bImageFile: document.querySelector("#team-b-image-file"),
     bLibraryButton: document.querySelector("#team-b-library-button"),
-    bLibrary: document.querySelector("#team-b-library")
+    bLibrary: document.querySelector("#team-b-library"),
+    bRacket: document.querySelector("#team-b-racket"),
+    bAge: document.querySelector("#team-b-age"),
+    bHand: document.querySelector("#team-b-hand"),
+    bNationality: document.querySelector("#team-b-nationality"),
+    bClub: document.querySelector("#team-b-club")
   },
   doublesOnly: Array.from(document.querySelectorAll("[data-doubles-only]"))
 };
@@ -383,10 +393,20 @@ function render(state) {
   setValueIfIdle(elements.teams.aPlayer1, state.teams.a.players[0]);
   setValueIfIdle(elements.teams.aPlayer2, state.teams.a.players[1]);
   setValueIfIdle(elements.teams.aImageUrl, state.teams.a.imageUrl || "");
+  setValueIfIdle(elements.teams.aRacket, state.teams.a.profile?.racket || "");
+  setValueIfIdle(elements.teams.aAge, state.teams.a.profile?.age || "");
+  setValueIfIdle(elements.teams.aHand, state.teams.a.profile?.hand || "");
+  setValueIfIdle(elements.teams.aNationality, state.teams.a.profile?.nationality || "");
+  setValueIfIdle(elements.teams.aClub, state.teams.a.profile?.club || "");
   setValueIfIdle(elements.teams.bLabel, state.teams.b.displayName);
   setValueIfIdle(elements.teams.bPlayer1, state.teams.b.players[0]);
   setValueIfIdle(elements.teams.bPlayer2, state.teams.b.players[1]);
   setValueIfIdle(elements.teams.bImageUrl, state.teams.b.imageUrl || "");
+  setValueIfIdle(elements.teams.bRacket, state.teams.b.profile?.racket || "");
+  setValueIfIdle(elements.teams.bAge, state.teams.b.profile?.age || "");
+  setValueIfIdle(elements.teams.bHand, state.teams.b.profile?.hand || "");
+  setValueIfIdle(elements.teams.bNationality, state.teams.b.profile?.nationality || "");
+  setValueIfIdle(elements.teams.bClub, state.teams.b.profile?.club || "");
 
   setValueIfIdle(elements.directScoreA, currentGame.scoreA);
   setValueIfIdle(elements.directScoreB, currentGame.scoreB);
@@ -536,12 +556,26 @@ function attachEvents() {
       a: {
         displayName: elements.teams.aLabel.value,
         players: [elements.teams.aPlayer1.value, elements.teams.aPlayer2.value],
-        imageUrl: teamAImageUrl
+        imageUrl: teamAImageUrl,
+        profile: {
+          racket: elements.teams.aRacket.value,
+          age: elements.teams.aAge.value,
+          hand: elements.teams.aHand.value,
+          nationality: elements.teams.aNationality.value,
+          club: elements.teams.aClub.value
+        }
       },
       b: {
         displayName: elements.teams.bLabel.value,
         players: [elements.teams.bPlayer1.value, elements.teams.bPlayer2.value],
-        imageUrl: teamBImageUrl
+        imageUrl: teamBImageUrl,
+        profile: {
+          racket: elements.teams.bRacket.value,
+          age: elements.teams.bAge.value,
+          hand: elements.teams.bHand.value,
+          nationality: elements.teams.bNationality.value,
+          club: elements.teams.bClub.value
+        }
       }
     });
 

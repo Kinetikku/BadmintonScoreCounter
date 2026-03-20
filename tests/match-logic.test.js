@@ -60,17 +60,42 @@ test("score buttons stop changing a completed game until the next one is started
   assert.equal(state.games[0].scoreB, 9);
 });
 
-test("team updates keep finals image URLs in state", () => {
+test("team updates keep finals images and profile fields in state", () => {
   const state = applyDerivedState(createDefaultState());
   const updated = updateTeams(state, {
     a: {
-      imageUrl: "https://example.com/left.png"
+      imageUrl: "https://example.com/left.png",
+      profile: {
+        racket: "Astrox 88D",
+        age: "23",
+        hand: "Right",
+        nationality: "Ireland",
+        club: "Tallaght"
+      }
     },
     b: {
-      imageUrl: "https://example.com/right.png"
+      imageUrl: "https://example.com/right.png",
+      profile: {
+        racket: "Arcsaber 11",
+        age: "27",
+        hand: "Left",
+        nationality: "Spain",
+        club: "Madrid Central"
+      }
     }
   });
 
   assert.equal(updated.teams.a.imageUrl, "https://example.com/left.png");
   assert.equal(updated.teams.b.imageUrl, "https://example.com/right.png");
+  assert.equal(updated.teams.a.profile.racket, "Astrox 88D");
+  assert.equal(updated.teams.a.profile.age, "23");
+  assert.equal(updated.teams.a.profile.hand, "Right");
+  assert.equal(updated.teams.a.profile.nationality, "Ireland");
+  assert.equal(updated.teams.a.profile.club, "Tallaght");
+  assert.equal(updated.teams.b.profile.racket, "Arcsaber 11");
+  assert.equal(updated.teams.b.profile.age, "27");
+  assert.equal(updated.teams.b.profile.hand, "Left");
+  assert.equal(updated.teams.b.profile.nationality, "Spain");
+  assert.equal(updated.teams.b.profile.club, "Madrid Central");
 });
+

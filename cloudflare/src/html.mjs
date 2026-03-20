@@ -1,4 +1,4 @@
-﻿function html(title, body) {
+function html(title, body) {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -165,7 +165,7 @@ function renderAdminAppPage() {
           <div class="section-heading section-heading--stacked">
             <div>
               <p class="eyebrow">Competitors</p>
-              <h2>Names and finals images</h2>
+              <h2>Names, finals images, and player info</h2>
             </div>
             <div class="button-cluster">
               <button id="trigger-finals-button" class="secondary-button" type="button">Run finals animation</button>
@@ -201,6 +201,28 @@ function renderAdminAppPage() {
                   <button id="team-a-library-button" class="ghost-button asset-library-toggle" type="button">Choose existing Cloudinary image</button>
                   <div id="team-a-library" class="asset-library" hidden></div>
                 </div>
+                <div class="team-profile-grid">
+                  <label>
+                    <span>Racket</span>
+                    <input id="team-a-racket" type="text" maxlength="40">
+                  </label>
+                  <label>
+                    <span>Age</span>
+                    <input id="team-a-age" type="text" maxlength="3">
+                  </label>
+                  <label>
+                    <span>Hand</span>
+                    <input id="team-a-hand" type="text" maxlength="20">
+                  </label>
+                  <label>
+                    <span>Nationality</span>
+                    <input id="team-a-nationality" type="text" maxlength="40">
+                  </label>
+                  <label>
+                    <span>Club</span>
+                    <input id="team-a-club" type="text" maxlength="60">
+                  </label>
+                </div>
               </fieldset>
 
               <fieldset class="team-fieldset">
@@ -229,12 +251,34 @@ function renderAdminAppPage() {
                   <button id="team-b-library-button" class="ghost-button asset-library-toggle" type="button">Choose existing Cloudinary image</button>
                   <div id="team-b-library" class="asset-library" hidden></div>
                 </div>
+                <div class="team-profile-grid">
+                  <label>
+                    <span>Racket</span>
+                    <input id="team-b-racket" type="text" maxlength="40">
+                  </label>
+                  <label>
+                    <span>Age</span>
+                    <input id="team-b-age" type="text" maxlength="3">
+                  </label>
+                  <label>
+                    <span>Hand</span>
+                    <input id="team-b-hand" type="text" maxlength="20">
+                  </label>
+                  <label>
+                    <span>Nationality</span>
+                    <input id="team-b-nationality" type="text" maxlength="40">
+                  </label>
+                  <label>
+                    <span>Club</span>
+                    <input id="team-b-club" type="text" maxlength="60">
+                  </label>
+                </div>
               </fieldset>
             </div>
 
             <div class="actions-row">
               <button class="primary-button" type="submit">Save names and images</button>
-              <p class="helper-text">Paste an image URL, pick a local file, or reuse a previously uploaded Cloudinary image.</p>
+              <p class="helper-text">Paste an image URL, pick a local file, reuse a previously uploaded Cloudinary image, and add the player facts shown in the finals intro graphic.</p>
             </div>
           </form>
         </section>
@@ -342,22 +386,73 @@ function renderFinalsAppPage() {
           <div id="finals-name-a" class="finals-side__name"></div>
         </article>
 
-        <section id="finals-card" class="finals-card" aria-label="Upcoming match details">
-          <img id="finals-logo" class="finals-card__logo" alt="Tournament logo" hidden>
-          <h2 id="finals-event-name" class="finals-card__title"></h2>
-          <p class="finals-card__eyebrow">Upcoming Match</p>
-          <div class="finals-card__rows">
-            <div class="finals-card__row">
-              <span class="finals-card__label">Division</span>
-              <strong id="finals-division" class="finals-card__value"></strong>
-            </div>
-            <div class="finals-card__row">
-              <span class="finals-card__label">Game Type</span>
-              <strong id="finals-game-type" class="finals-card__value"></strong>
-            </div>
-            <div class="finals-card__row">
-              <span class="finals-card__label">Total Games</span>
-              <strong id="finals-total-games" class="finals-card__value"></strong>
+        <section class="finals-center" aria-label="Upcoming match details">
+          <div id="finals-logo-badge" class="finals-logo-badge" hidden>
+            <img id="finals-logo" class="finals-logo-badge__image" alt="Tournament logo" hidden>
+          </div>
+
+          <div class="finals-panel">
+            <header class="finals-header">
+              <p class="finals-header__eyebrow">Upcoming Match</p>
+              <h2 id="finals-event-name" class="finals-header__title"></h2>
+              <div class="finals-header__meta">
+                <div class="finals-header__meta-item">
+                  <span class="finals-header__meta-label">Match division</span>
+                  <strong id="finals-division" class="finals-header__meta-value"></strong>
+                </div>
+                <div class="finals-header__meta-item">
+                  <span class="finals-header__meta-label">Game type</span>
+                  <strong id="finals-game-type" class="finals-header__meta-value"></strong>
+                </div>
+              </div>
+            </header>
+
+            <div class="finals-facts-grid">
+              <section class="finals-facts finals-facts--left">
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Racket</span>
+                  <div id="finals-a-racket" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Age</span>
+                  <div id="finals-a-age" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Hand</span>
+                  <div id="finals-a-hand" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Nationality</span>
+                  <div id="finals-a-nationality" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Club</span>
+                  <div id="finals-a-club" class="finals-fact__value"></div>
+                </div>
+              </section>
+
+              <section class="finals-facts finals-facts--right">
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Racket</span>
+                  <div id="finals-b-racket" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Age</span>
+                  <div id="finals-b-age" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Hand</span>
+                  <div id="finals-b-hand" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Nationality</span>
+                  <div id="finals-b-nationality" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Club</span>
+                  <div id="finals-b-club" class="finals-fact__value"></div>
+                </div>
+              </section>
             </div>
           </div>
         </section>
@@ -383,6 +478,11 @@ export {
   renderOverlayAppPage,
   routeKind
 };
+
+
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -97,7 +97,7 @@
           <div class="section-heading section-heading--stacked">
             <div>
               <p class="eyebrow">Competitors</p>
-              <h2>Names and finals images</h2>
+              <h2>Names, finals images, and player info</h2>
             </div>
             <div class="button-cluster">
               <button id="trigger-finals-button" class="secondary-button" type="button">Run finals animation</button>
@@ -133,6 +133,28 @@
                   <button id="team-a-library-button" class="ghost-button asset-library-toggle" type="button">Choose existing Cloudinary image</button>
                   <div id="team-a-library" class="asset-library" hidden></div>
                 </div>
+                <div class="team-profile-grid">
+                  <label>
+                    <span>Racket</span>
+                    <input id="team-a-racket" type="text" maxlength="40">
+                  </label>
+                  <label>
+                    <span>Age</span>
+                    <input id="team-a-age" type="text" maxlength="3">
+                  </label>
+                  <label>
+                    <span>Hand</span>
+                    <input id="team-a-hand" type="text" maxlength="20">
+                  </label>
+                  <label>
+                    <span>Nationality</span>
+                    <input id="team-a-nationality" type="text" maxlength="40">
+                  </label>
+                  <label>
+                    <span>Club</span>
+                    <input id="team-a-club" type="text" maxlength="60">
+                  </label>
+                </div>
               </fieldset>
 
               <fieldset class="team-fieldset">
@@ -161,12 +183,34 @@
                   <button id="team-b-library-button" class="ghost-button asset-library-toggle" type="button">Choose existing Cloudinary image</button>
                   <div id="team-b-library" class="asset-library" hidden></div>
                 </div>
+                <div class="team-profile-grid">
+                  <label>
+                    <span>Racket</span>
+                    <input id="team-b-racket" type="text" maxlength="40">
+                  </label>
+                  <label>
+                    <span>Age</span>
+                    <input id="team-b-age" type="text" maxlength="3">
+                  </label>
+                  <label>
+                    <span>Hand</span>
+                    <input id="team-b-hand" type="text" maxlength="20">
+                  </label>
+                  <label>
+                    <span>Nationality</span>
+                    <input id="team-b-nationality" type="text" maxlength="40">
+                  </label>
+                  <label>
+                    <span>Club</span>
+                    <input id="team-b-club" type="text" maxlength="60">
+                  </label>
+                </div>
               </fieldset>
             </div>
 
             <div class="actions-row">
               <button class="primary-button" type="submit">Save names and images</button>
-              <p class="helper-text">Paste an image URL, pick a local file, or reuse a previously uploaded Cloudinary image.</p>
+              <p class="helper-text">Paste an image URL, pick a local file, reuse a previously uploaded Cloudinary image, and add the player facts shown in the finals intro graphic.</p>
             </div>
           </form>
         </section>
@@ -234,5 +278,7 @@
     <script src="/admin.js" defer></script>
   </body>
 </html>
+
+
 
 

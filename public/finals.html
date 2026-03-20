@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en" class="finals-page">
   <head>
     <meta charset="utf-8">
@@ -14,22 +14,73 @@
           <div id="finals-name-a" class="finals-side__name"></div>
         </article>
 
-        <section id="finals-card" class="finals-card" aria-label="Upcoming match details">
-          <img id="finals-logo" class="finals-card__logo" alt="Tournament logo" hidden>
-          <h2 id="finals-event-name" class="finals-card__title"></h2>
-          <p class="finals-card__eyebrow">Upcoming Match</p>
-          <div class="finals-card__rows">
-            <div class="finals-card__row">
-              <span class="finals-card__label">Division</span>
-              <strong id="finals-division" class="finals-card__value"></strong>
-            </div>
-            <div class="finals-card__row">
-              <span class="finals-card__label">Game Type</span>
-              <strong id="finals-game-type" class="finals-card__value"></strong>
-            </div>
-            <div class="finals-card__row">
-              <span class="finals-card__label">Total Games</span>
-              <strong id="finals-total-games" class="finals-card__value"></strong>
+        <section class="finals-center" aria-label="Upcoming match details">
+          <div id="finals-logo-badge" class="finals-logo-badge" hidden>
+            <img id="finals-logo" class="finals-logo-badge__image" alt="Tournament logo" hidden>
+          </div>
+
+          <div class="finals-panel">
+            <header class="finals-header">
+              <p class="finals-header__eyebrow">Upcoming Match</p>
+              <h2 id="finals-event-name" class="finals-header__title"></h2>
+              <div class="finals-header__meta">
+                <div class="finals-header__meta-item">
+                  <span class="finals-header__meta-label">Match division</span>
+                  <strong id="finals-division" class="finals-header__meta-value"></strong>
+                </div>
+                <div class="finals-header__meta-item">
+                  <span class="finals-header__meta-label">Game type</span>
+                  <strong id="finals-game-type" class="finals-header__meta-value"></strong>
+                </div>
+              </div>
+            </header>
+
+            <div class="finals-facts-grid">
+              <section class="finals-facts finals-facts--left">
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Racket</span>
+                  <div id="finals-a-racket" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Age</span>
+                  <div id="finals-a-age" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Hand</span>
+                  <div id="finals-a-hand" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Nationality</span>
+                  <div id="finals-a-nationality" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Club</span>
+                  <div id="finals-a-club" class="finals-fact__value"></div>
+                </div>
+              </section>
+
+              <section class="finals-facts finals-facts--right">
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Racket</span>
+                  <div id="finals-b-racket" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Age</span>
+                  <div id="finals-b-age" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Hand</span>
+                  <div id="finals-b-hand" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Nationality</span>
+                  <div id="finals-b-nationality" class="finals-fact__value"></div>
+                </div>
+                <div class="finals-fact">
+                  <span class="finals-fact__label">Club</span>
+                  <div id="finals-b-club" class="finals-fact__value"></div>
+                </div>
+              </section>
             </div>
           </div>
         </section>
@@ -44,3 +95,5 @@
     <script src="/finals.js" defer></script>
   </body>
 </html>
+
+

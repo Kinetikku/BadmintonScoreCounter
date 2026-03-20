@@ -49,13 +49,27 @@ function createDefaultState() {
         displayName: "Court Left",
         players: ["Player A", "Player A2"],
         imageUrl: "",
-        imageVersion: 0
+        imageVersion: 0,
+        profile: {
+          racket: "",
+          age: "",
+          hand: "",
+          nationality: "",
+          club: ""
+        }
       },
       b: {
         displayName: "Court Right",
         players: ["Player B", "Player B2"],
         imageUrl: "",
-        imageVersion: 0
+        imageVersion: 0,
+        profile: {
+          racket: "",
+          age: "",
+          hand: "",
+          nationality: "",
+          club: ""
+        }
       }
     },
     presentation: {
@@ -101,6 +115,16 @@ function normalizeSettings(rawSettings = {}) {
   };
 }
 
+function normalizeTeamProfile(rawProfile = {}) {
+  return {
+    racket: typeof rawProfile.racket === "string" ? rawProfile.racket.trim() : "",
+    age: typeof rawProfile.age === "string" ? rawProfile.age.trim() : typeof rawProfile.age === "number" ? String(rawProfile.age) : "",
+    hand: typeof rawProfile.hand === "string" ? rawProfile.hand.trim() : "",
+    nationality: typeof rawProfile.nationality === "string" ? rawProfile.nationality.trim() : "",
+    club: typeof rawProfile.club === "string" ? rawProfile.club.trim() : ""
+  };
+}
+
 function normalizeTeams(rawTeams = {}) {
   const defaultState = createDefaultState();
   const teamA = rawTeams.a ?? {};
@@ -114,7 +138,8 @@ function normalizeTeams(rawTeams = {}) {
         cleanText(teamA.players?.[1], defaultState.teams.a.players[1])
       ],
       imageUrl: typeof teamA.imageUrl === "string" ? teamA.imageUrl.trim() : defaultState.teams.a.imageUrl,
-      imageVersion: clampNumber(teamA.imageVersion ?? defaultState.teams.a.imageVersion, 0, 9_999_999_999_999)
+      imageVersion: clampNumber(teamA.imageVersion ?? defaultState.teams.a.imageVersion, 0, 9_999_999_999_999),
+      profile: normalizeTeamProfile(teamA.profile ?? defaultState.teams.a.profile)
     },
     b: {
       displayName: cleanText(teamB.displayName, defaultState.teams.b.displayName),
@@ -123,7 +148,8 @@ function normalizeTeams(rawTeams = {}) {
         cleanText(teamB.players?.[1], defaultState.teams.b.players[1])
       ],
       imageUrl: typeof teamB.imageUrl === "string" ? teamB.imageUrl.trim() : defaultState.teams.b.imageUrl,
-      imageVersion: clampNumber(teamB.imageVersion ?? defaultState.teams.b.imageVersion, 0, 9_999_999_999_999)
+      imageVersion: clampNumber(teamB.imageVersion ?? defaultState.teams.b.imageVersion, 0, 9_999_999_999_999),
+      profile: normalizeTeamProfile(teamB.profile ?? defaultState.teams.b.profile)
     }
   };
 }
@@ -251,11 +277,19 @@ function updateTeams(state, payload = {}) {
   const nextTeams = {
     a: {
       ...state.teams.a,
-      ...(payload.a ?? {})
+      ...(payload.a ?? {}),
+      profile: {
+        ...state.teams.a.profile,
+        ...(payload.a?.profile ?? {})
+      }
     },
     b: {
       ...state.teams.b,
-      ...(payload.b ?? {})
+      ...(payload.b ?? {}),
+      profile: {
+        ...state.teams.b.profile,
+        ...(payload.b?.profile ?? {})
+      }
     }
   };
 
@@ -383,3 +417,6 @@ module.exports = {
   updateSettings,
   updateTeams
 };
+
+
+
